@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.figure_factory as ff
 import numpy as np
+import pydeck as pdk
 
 from datetime import datetime, timedelta
 
@@ -30,6 +31,34 @@ def histogram(df: pd.DataFrame):
     return fig
 
 
+def pydeck_map(data, lat, lon, zoom):
+    data_filtered = data[['latitude', 'longitude', 'mag']]
+    st.pydeck_chart(
+        pdk.Deck(
+            map_style="mapbox://styles/mapbox/light-v9",
+            initial_view_state={
+                "latitude": lat,
+                "longitude": lon,
+                "zoom": zoom,
+                "pitch": 50,
+            },
+            layers=[
+                pdk.Layer(
+                    "HexagonLayer",
+                    data=data_filtered,
+                    get_position=["longitude", "latitude"],
+                    auto_highlight=True,
+                    radius=100000,
+                    elevation_scale=4,
+                    elevation_range=[0, 500000],
+                    pickable=True,
+                    extruded=True,
+                ),
+            ],
+        )
+    )
+
+
 def streamlit_layout():
     st.title('USGS Earthquakes')
 
@@ -51,6 +80,8 @@ def streamlit_layout():
     st.subheader('Histogram')
     fig = histogram(df)
     st.plotly_chart(fig, use_container_width=True)
+
+    pydeck_map(df, 0, 0, 0)
 
 
 if __name__ == '__main__':
